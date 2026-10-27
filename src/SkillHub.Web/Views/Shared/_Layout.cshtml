@@ -1,20 +1,22 @@
+@using System.Text.Json
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-[#F4F7F9]">
+<html lang="es" class="h-full bg-[#F8FAFC]">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SkillHub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Work Sans', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
 <body class="min-h-full flex flex-col text-slate-800 antialiased">
 
-    <header class="sticky top-0 z-50 bg-[#00324D] text-white border-b-2 border-[#39A900]">
+    <header class="sticky top-0 z-40 bg-[#00324D] text-white border-b-2 border-[#39A900]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center gap-8">
@@ -117,22 +119,6 @@
     </header>
 
     <main role="main" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        @if (TempData["SuccessMessage"] is string successMsg)
-        {
-            <div role="alert" class="mb-6 rounded-xl bg-[#EBF7E5] border-l-4 border-[#39A900] p-4 flex items-center justify-between text-[#00324D]">
-                <p class="text-sm font-semibold">@successMsg</p>
-                <button type="button" onclick="this.parentElement.remove()" class="text-[#00324D] hover:opacity-70 p-1 text-sm font-bold">✕</button>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] is string errorMsg)
-        {
-            <div role="alert" class="mb-6 rounded-xl bg-rose-50 border-l-4 border-rose-600 p-4 flex items-center justify-between text-rose-900">
-                <p class="text-sm font-semibold">@errorMsg</p>
-                <button type="button" onclick="this.parentElement.remove()" class="text-rose-700 hover:opacity-70 p-1 text-sm font-bold">✕</button>
-            </div>
-        }
-
         @RenderBody()
     </main>
 
@@ -161,6 +147,14 @@
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            @if (User.IsInRole("Employee"))
+                            {
+                                <li>
+                                    <a asp-controller="Account" asp-action="Students" class="hover:text-[#8CE558] transition">
+                                        Ver estudiantes
+                                    </a>
+                                </li>
+                            }
                             @if (User.IsInRole("Participant"))
                             {
                                 <li>
@@ -210,6 +204,36 @@
             </div>
         </div>
     </footer>
+
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Operación exitosa',
+                    text: @Html.Raw(JsonSerializer.Serialize(successMsg)),
+                    confirmButtonColor: '#39A900',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        </script>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMsg)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo completar la acción',
+                    text: @Html.Raw(JsonSerializer.Serialize(errorMsg)),
+                    confirmButtonColor: '#00324D',
+                    confirmButtonText: 'Entendido'
+                });
+            });
+        </script>
+    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -124,10 +124,11 @@
                                                class="font-bold px-3 py-1.5 rounded bg-[#00324D] text-white hover:bg-[#002235] transition">
                                                 ⬇ PDF
                                             </a>
-                                            <form asp-controller="Enrollments" asp-action="Cancel" asp-route-id="@enrollment.Id" method="post" class="inline">
+                                            <form id="emp-cancel-@enrollment.Id" asp-controller="Enrollments" asp-action="Cancel" asp-route-id="@enrollment.Id" method="post" class="inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="workshopId" value="@Model.Workshop.Id" />
-                                                <button type="submit"
+                                                <button type="button"
+                                                        onclick="confirmEmployeeCancel('@enrollment.Id', '@enrollment.ParticipantName')"
                                                         class="font-bold px-3 py-1.5 rounded bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
                                                     Cancelar cupo
                                                 </button>
@@ -148,3 +149,24 @@
         }
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        function confirmEmployeeCancel(enrollmentId, studentName) {
+            Swal.fire({
+                title: '¿Cancelar inscripción del estudiante?',
+                html: `Se cancelará la inscripción activa de <strong>${studentName}</strong> y se liberará el cupo.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#E11D48',
+                cancelButtonColor: '#00324D',
+                confirmButtonText: 'Sí, cancelar cupo',
+                cancelButtonText: 'Volver'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('emp-cancel-' + enrollmentId)?.submit();
+                }
+            });
+        }
+    </script>
+}
