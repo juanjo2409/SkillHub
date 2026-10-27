@@ -1,0 +1,139 @@
+@model SkillHub.Application.DTOs.Workshops.WorkshopResponseDto
+@{
+    ViewData["Title"] = Model.Title;
+    var hasSpots = Model.AvailableSpots > 0;
+    var occupancyPercent = Model.MaxCapacity > 0
+        ? Math.Min(100, (int)Math.Round((double)Model.ActiveEnrollmentsCount / Model.MaxCapacity * 100))
+        : 0;
+    var durationHours = Math.Max(1, (Model.EndDate - Model.StartDate).TotalHours);
+}
+
+<nav aria-label="Breadcrumb" class="mb-6">
+    <a asp-controller="Workshops" asp-action="Index"
+       class="inline-flex items-center gap-2 text-sm font-bold text-[#00324D] hover:text-[#39A900] transition">
+        <span>←</span>
+        <span>Volver a la oferta de talleres</span>
+    </a>
+</nav>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <article class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="bg-[#00324D] px-8 py-5 border-b-4 border-[#39A900] flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded bg-[#39A900] text-white">
+                        Código: @Model.Code
+                    </span>
+                    <span class="text-xs font-bold text-slate-200">
+                        Área: @Model.InstructorSpecialty
+                    </span>
+                </div>
+                <span class="text-xs font-bold px-3 py-1 rounded bg-white/10 text-[#8CE558]">
+                    Presencial • @durationHours horas
+                </span>
+            </div>
+
+            <div class="p-8">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#00324D] mb-4">@Model.Title</h1>
+                <p class="text-base text-slate-600 leading-relaxed mb-8">@Model.Description</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-slate-200">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Instructor Asignado</p>
+                        <p class="text-base font-extrabold text-[#00324D]">@Model.InstructorName</p>
+                        <p class="text-xs font-semibold text-[#2D8600] mt-0.5">@Model.InstructorEmail</p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Programación del Taller</p>
+                        <p class="text-base font-extrabold text-[#00324D]">@Model.StartDate.ToString("yyyy-MM-dd")</p>
+                        <p class="text-xs font-semibold text-slate-600 mt-0.5">
+                            Horario: @Model.StartDate.ToString("HH:mm") a @Model.EndDate.ToString("HH:mm") UTC
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section aria-labelledby="rules-heading" class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
+            <h2 id="rules-heading" class="text-lg font-extrabold text-[#00324D] mb-4">Condiciones de Inscripción</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded bg-[#EBF7E5] text-[#2D8600] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                    <p><strong>Sin cruces de horario:</strong> El sistema valida que no tengas otro taller inscrito a la misma hora.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded bg-[#EBF7E5] text-[#2D8600] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                    <p><strong>Constancia PDF:</strong> Descarga inmediata del documento oficial de inscripción activa.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded bg-[#EBF7E5] text-[#2D8600] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                    <p><strong>Cancelación hasta 24h antes:</strong> Libera tu cupo si no puedes asistir al taller.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded bg-[#EBF7E5] text-[#2D8600] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                    <p><strong>Reinscripción disponible:</strong> Puedes volver a inscribirte si el taller aún cuenta con cupos.</p>
+                </div>
+            </div>
+        </section>
+    </article>
+
+    <aside class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs h-fit lg:sticky lg:top-28">
+        <h2 class="text-lg font-extrabold text-[#00324D] mb-4">Inscripción al Taller</h2>
+
+        <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 mb-6">
+            <div class="flex justify-between items-baseline mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Cupos Libres</span>
+                <span class="text-3xl font-extrabold @(hasSpots ? "text-[#39A900]" : "text-rose-600")">
+                    @Model.AvailableSpots <span class="text-sm font-semibold text-slate-400">/ @Model.MaxCapacity</span>
+                </span>
+            </div>
+
+            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden mb-2">
+                <div class="h-full rounded-full @(hasSpots ? "bg-[#39A900]" : "bg-rose-600")" style="width: @(Math.Max(10, occupancyPercent))%"></div>
+            </div>
+
+            <p class="text-xs text-slate-600">Participantes inscritos: <strong>@Model.ActiveEnrollmentsCount</strong></p>
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Participant"))
+        {
+            @if (hasSpots)
+            {
+                <form asp-controller="Enrollments" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="workshopId" value="@Model.Id" />
+                    <button type="submit"
+                            class="w-full py-3.5 px-5 rounded-xl bg-[#39A900] text-white font-bold text-sm hover:bg-[#2D8600] shadow-sm transition">
+                        Inscribirme en este Taller
+                    </button>
+                </form>
+            }
+            else
+            {
+                <button disabled class="w-full py-3.5 px-5 rounded-xl bg-slate-200 text-slate-500 font-bold text-sm cursor-not-allowed">
+                    Sin cupos disponibles
+                </button>
+            }
+        }
+        else if (User.Identity?.IsAuthenticated != true)
+        {
+            <a asp-controller="Account" asp-action="Login"
+               class="block text-center w-full py-3.5 px-5 rounded-xl bg-[#39A900] text-white font-bold text-sm hover:bg-[#2D8600] shadow-sm transition">
+                Ingresa para inscribirte
+            </a>
+        }
+        else
+        {
+            <div class="space-y-3">
+                <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@Model.Id"
+                   class="block text-center w-full py-3.5 px-5 rounded-xl bg-[#39A900] text-white font-bold text-sm hover:bg-[#2D8600] shadow-sm transition">
+                    ⬇ Descargar Excel de Inscritos (.xlsx)
+                </a>
+                <p class="text-xs text-slate-500 text-center">
+                    Conectado como Instructor/Empleado.
+                </p>
+            </div>
+        }
+    </aside>
+</div>

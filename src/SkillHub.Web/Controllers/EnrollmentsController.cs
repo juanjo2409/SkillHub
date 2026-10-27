@@ -1,0 +1,97 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SkillHub.Application.DTOs.Enrollments;
+using SkillHub.Application.Interface;
+using SkillHub.Domain.Exceptions;
+
+namespace SkillHub.Web.Controllers;
+
+[Authorize]
+public class EnrollmentsController : Controller
+{
+    private readonly IEnrollmentService _enrollmentService;
+
+    public EnrollmentsController(IEnrollmentService enrollmentService)
+    {
+        _enrollmentService = enrollmentService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Mine(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var enrollments = await _enrollmentService.GetMyEnrollmentsAsync(userId, cancellationToken);
+            return View(enrollments);
+        }
+        catch (DomainException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction("Index", "Workshops");
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(Guid workshopId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var enrollment = await _enrollmentService.EnrollParticipantAsync(
+                userId,
+                new CreateEnrollmentRequestDto(workshopId),
+                cancellationToken);
+
+            TempData["SuccessMessage"] = $"Te has inscrito exitosamente en el taller '{enrollment.WorkshopTitle}' ({enrollment.WorkshopCode}).";
+            return RedirectToAction(nameof(Mine));
+        }
+        catch (DomainException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction("Details", "Workshops", new { id = workshopId });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var isEmployee = User.IsInRole("Employee");
+            var cancelled = await _enrollmentService.CancelEnrollmentAsync(id, userId, isEmployee, cancellationToken);
+
+            TempData["SuccessMessage"] = $"La inscripción al taller '{cancelled.WorkshopTitle}' ha sido cancelada y el cupo fue liberado.";
+        }
+        catch (DomainException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Mine));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Certificate(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var isEmployee = User.IsInRole("Employee");
+            var pdfBytes = await _enrollmentService.GenerateCertificatePdfAsync(id, userId, isEmployee, cancellationToken);
+            return File(pdfBytes, "application/pdf", $"Constancia-SkillHub-{id}.pdf");
+        }
+        catch (DomainException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction(nameof(Mine));
+        }
+    }
+
+    private string GetCurrentUserId() =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+}

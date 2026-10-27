@@ -1,0 +1,124 @@
+@model IReadOnlyList<SkillHub.Application.DTOs.Enrollments.EnrollmentResponseDto>
+@{
+    ViewData["Title"] = "Mis Inscripciones";
+    var activeCount = Model.Count(e => e.Status == "Active");
+    var cancelledCount = Model.Count(e => e.Status != "Active");
+}
+
+<section aria-labelledby="my-enrollments-heading">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#2D8600]">Panel del Aprendiz</span>
+            <h1 id="my-enrollments-heading" class="text-2xl sm:text-3xl font-extrabold text-[#00324D] mt-0.5">Mis Inscripciones</h1>
+            <p class="text-sm text-slate-600 mt-1">Consulta tus talleres inscritos, descarga tu constancia en PDF o cancela hasta 24h antes.</p>
+        </div>
+        <a asp-controller="Workshops" asp-action="Index"
+           class="inline-flex items-center justify-center text-sm font-bold px-5 py-3 rounded-xl bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
+            + Ver Oferta de Talleres
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Inscripciones Activas</p>
+            <p class="text-3xl font-extrabold text-[#2D8600] mt-1">@activeCount</p>
+        </div>
+        <div class="bg-white rounded-xl border-l-4 border-[#00324D] border border-slate-200 p-5 shadow-xs">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Constancias PDF Habilitadas</p>
+            <p class="text-3xl font-extrabold text-[#00324D] mt-1">@activeCount</p>
+        </div>
+        <div class="bg-white rounded-xl border-l-4 border-slate-400 border border-slate-200 p-5 shadow-xs">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Canceladas</p>
+            <p class="text-3xl font-extrabold text-slate-500 mt-1">@cancelledCount</p>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs">
+            <p class="text-lg font-extrabold text-[#00324D] mb-1">No tienes inscripciones registradas</p>
+            <p class="text-sm text-slate-500 mb-6">Explora la oferta de talleres disponibles e inscríbete ahora.</p>
+            <a asp-controller="Workshops" asp-action="Index"
+               class="inline-block text-sm font-bold px-6 py-3 rounded-xl bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                Explorar Oferta de Talleres
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-4">
+            @foreach (var enrollment in Model)
+            {
+                var isActive = enrollment.Status == "Active";
+
+                <article class="bg-white rounded-xl border @(isActive ? "border-slate-200 border-l-4 border-l-[#39A900]" : "border-slate-200 opacity-80") p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <span class="text-xs font-extrabold uppercase px-2.5 py-1 rounded bg-[#00324D] text-white">
+                                @enrollment.WorkshopCode
+                            </span>
+
+                            @if (isActive)
+                            {
+                                <span class="text-xs font-bold px-3 py-1 rounded bg-[#EBF7E5] text-[#2D8600] border border-[#39A900]/30">
+                                    ● Activa
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-xs font-bold px-3 py-1 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                    Cancelada
+                                </span>
+                            }
+
+                            <span class="text-xs text-slate-400">
+                                Inscrito el @enrollment.EnrollmentDate.ToString("yyyy-MM-dd HH:mm") UTC
+                            </span>
+                        </div>
+
+                        <h2 class="text-xl font-extrabold text-[#00324D]">@enrollment.WorkshopTitle</h2>
+
+                        <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-600">
+                            <span><strong>Instructor:</strong> @enrollment.InstructorName</span>
+                            <span><strong>Fecha:</strong> @enrollment.StartDate.ToString("yyyy-MM-dd")</span>
+                            <span><strong>Horario:</strong> @enrollment.StartDate.ToString("HH:mm") a @enrollment.EndDate.ToString("HH:mm") UTC</span>
+                        </div>
+
+                        @if (!isActive && enrollment.CancelledAt.HasValue)
+                        {
+                            <p class="text-xs font-semibold text-rose-600">
+                                Cancelada el @enrollment.CancelledAt.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                            </p>
+                        }
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 shrink-0">
+                        @if (isActive)
+                        {
+                            <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@enrollment.Id"
+                               class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-lg bg-[#00324D] text-white hover:bg-[#002235] shadow-xs transition">
+                                <span>⬇ Descargar Constancia PDF</span>
+                            </a>
+
+                            <form asp-controller="Enrollments" asp-action="Cancel" asp-route-id="@enrollment.Id" method="post"
+                                  onsubmit="return confirm('¿Confirmas la cancelación de esta inscripción? Se liberará tu cupo.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="text-xs font-bold px-4 py-2.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
+                                    Cancelar Inscripción
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Workshops" asp-action="Details" asp-route-id="@enrollment.WorkshopId"
+                               class="text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                                Volver a inscribirme →
+                            </a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

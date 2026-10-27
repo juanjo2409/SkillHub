@@ -1,0 +1,231 @@
+@model SkillHub.Web.Models.UserProfileViewModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+    var initial = !string.IsNullOrEmpty(Model.FullName) ? Model.FullName.Substring(0, 1).ToUpperInvariant() : "U";
+    var activeEnrollmentsCount = Model.MyEnrollments.Count(e => e.Status == "Active");
+}
+
+<!-- Betowa Profile Header Card -->
+<section aria-labelledby="profile-heading" class="mb-8">
+    <div class="bg-[#00324D] rounded-2xl border-b-4 border-[#39A900] p-8 text-white shadow-md">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div class="flex items-center gap-5">
+                <div class="w-16 h-16 rounded-2xl bg-[#39A900] text-white text-2xl font-extrabold flex items-center justify-center shadow-lg shrink-0">
+                    @initial
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2.5 mb-1">
+                        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#39A900] text-white">
+                            @(Model.IsEmployee ? "Instructor / Empleado" : "Participante / Aprendiz")
+                        </span>
+                        <span class="text-xs text-[#8CE558] font-semibold">● Cuenta Verificada</span>
+                    </div>
+                    <h1 id="profile-heading" class="text-2xl sm:text-3xl font-extrabold text-white">@Model.FullName</h1>
+                    <p class="text-sm text-slate-300 mt-0.5">@Model.Email</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <a asp-controller="Workshops" asp-action="Index"
+                   class="text-xs font-bold px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition">
+                    Ver Catálogo de Talleres
+                </a>
+                @if (!Model.IsEmployee)
+                {
+                    <a asp-controller="Enrollments" asp-action="Mine"
+                       class="text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                        Gestionar Mis Inscripciones
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.IsEmployee)
+{
+    <!-- Instructor / Employee Dashboard with Excel Export per Workshop -->
+    <section aria-labelledby="instructor-panel-heading" class="space-y-8">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Talleres Asignados</p>
+                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@Model.MyInstructorWorkshops.Count</p>
+            </div>
+            <div class="bg-white rounded-xl border-l-4 border-[#00324D] border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Inscritos en Mis Talleres</p>
+                <p class="text-3xl font-extrabold text-[#2D8600] mt-1">@Model.MyInstructorWorkshops.Sum(w => w.ActiveEnrollmentsCount)</p>
+            </div>
+            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Talleres del Centro</p>
+                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@Model.AllWorkshops.Count</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="bg-[#00324D] px-6 py-4 border-b-2 border-[#39A900] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h2 id="instructor-panel-heading" class="text-base font-extrabold text-white">
+                        Mis Talleres Dictados — Descarga de Alumnos Inscritos en Excel
+                    </h2>
+                    <p class="text-xs text-slate-300">Descarga la planilla oficial en Excel (.xlsx) con el listado de aprendices inscritos en cada taller.</p>
+                </div>
+            </div>
+
+            <div class="p-6">
+                @if (Model.MyInstructorWorkshops.Count == 0)
+                {
+                    <p class="text-sm text-slate-500">No tienes talleres asignados directamente a tu correo.</p>
+                }
+                else
+                {
+                    <div class="space-y-4">
+                        @foreach (var workshop in Model.MyInstructorWorkshops)
+                        {
+                            <article class="rounded-xl border border-slate-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#39A900] transition">
+                                <div>
+                                    <div class="flex items-center gap-2.5 mb-1">
+                                        <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[#00324D] text-white">
+                                            @workshop.Code
+                                        </span>
+                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
+                                            @workshop.ActiveEnrollmentsCount / @workshop.MaxCapacity inscritos activos
+                                        </span>
+                                    </div>
+                                    <h3 class="text-lg font-extrabold text-[#00324D]">@workshop.Title</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">
+                                        Fecha: @workshop.StartDate.ToString("yyyy-MM-dd") • Horario: @workshop.StartDate.ToString("HH:mm") a @workshop.EndDate.ToString("HH:mm") UTC
+                                    </p>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                                    <a asp-controller="Workshops" asp-action="Details" asp-route-id="@workshop.Id"
+                                       class="text-xs font-bold px-3.5 py-2.5 rounded-lg border border-slate-200 text-[#00324D] hover:bg-slate-50 transition">
+                                        Ver Detalle
+                                    </a>
+                                    <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@workshop.Id"
+                                       class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
+                                        <span>⬇ Descargar Excel de Inscritos (.xlsx)</span>
+                                    </a>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- All Center Workshops Table for Employees -->
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <h2 class="text-base font-extrabold text-[#00324D]">Todos los Talleres de SkillHub (Control General de Empleados)</h2>
+                <p class="text-xs text-slate-500">Como empleado de SkillHub puedes exportar el listado de inscritos de cualquier taller del centro.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-[#00324D] text-white uppercase tracking-wider">
+                            <th class="py-3 px-4 font-bold">Código</th>
+                            <th class="py-3 px-4 font-bold">Taller</th>
+                            <th class="py-3 px-4 font-bold">Instructor</th>
+                            <th class="py-3 px-4 font-bold">Fecha</th>
+                            <th class="py-3 px-4 font-bold text-center">Inscritos / Cupo</th>
+                            <th class="py-3 px-4 font-bold text-right">Reporte Excel</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @foreach (var w in Model.AllWorkshops)
+                        {
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-3 px-4 font-extrabold text-[#00324D]">@w.Code</td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">@w.Title</td>
+                                <td class="py-3 px-4 text-slate-600">@w.InstructorName</td>
+                                <td class="py-3 px-4 text-slate-600">@w.StartDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
+                                        @w.ActiveEnrollmentsCount / @w.MaxCapacity
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@w.Id"
+                                       class="inline-block font-bold px-3 py-1.5 rounded bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                                        ⬇ Excel (.xlsx)
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <!-- Participant Profile Summary -->
+    <section aria-labelledby="participant-summary-heading" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Talleres Activos</p>
+                <p class="text-3xl font-extrabold text-[#2D8600] mt-1">@activeEnrollmentsCount</p>
+            </div>
+            <div class="bg-white rounded-xl border-l-4 border-[#00324D] border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Constancias en PDF</p>
+                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@activeEnrollmentsCount</p>
+            </div>
+            <div class="bg-white rounded-xl border-l-4 border-slate-400 border border-slate-200 p-5 shadow-xs">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Histórico</p>
+                <p class="text-3xl font-extrabold text-slate-700 mt-1">@Model.MyEnrollments.Count</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="participant-summary-heading" class="text-lg font-extrabold text-[#00324D]">Resumen de Mis Inscripciones Recientes</h2>
+                <a asp-controller="Enrollments" asp-action="Mine" class="text-xs font-bold text-[#39A900] hover:underline">
+                    Ver panel completo →
+                </a>
+            </div>
+
+            @if (Model.MyEnrollments.Count == 0)
+            {
+                <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200">
+                    <p class="text-sm font-bold text-[#00324D] mb-1">Aún no te has inscrito en ningún taller</p>
+                    <p class="text-xs text-slate-500 mb-4">Explora el catálogo e inscríbete para descargar tu constancia en PDF.</p>
+                    <a asp-controller="Workshops" asp-action="Index"
+                       class="inline-block text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                        Ir a Oferta de Talleres
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var enrollment in Model.MyEnrollments)
+                    {
+                        var isActive = enrollment.Status == "Active";
+                        <div class="p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-[#00324D] text-white">@enrollment.WorkshopCode</span>
+                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded @(isActive ? "bg-[#EBF7E5] text-[#2D8600]" : "bg-slate-100 text-slate-600")">
+                                        @(isActive ? "Activa" : "Cancelada")
+                                    </span>
+                                </div>
+                                <p class="text-sm font-extrabold text-[#00324D]">@enrollment.WorkshopTitle</p>
+                                <p class="text-xs text-slate-500">Instructor: @enrollment.InstructorName • Inicio: @enrollment.StartDate.ToString("yyyy-MM-dd HH:mm") UTC</p>
+                            </div>
+
+                            @if (isActive)
+                            {
+                                <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@enrollment.Id"
+                                   class="text-xs font-bold px-4 py-2 rounded-lg bg-[#00324D] text-white hover:bg-[#002235] transition shrink-0">
+                                    ⬇ Constancia PDF
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+}
