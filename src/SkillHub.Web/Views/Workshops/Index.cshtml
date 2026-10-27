@@ -10,21 +10,16 @@
         .ToList();
 }
 
-<!-- Betowa-style Hero Banner -->
 <section aria-labelledby="hero-heading" class="mb-8">
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#00324D] via-[#004266] to-[#005A64] text-white p-8 sm:p-10 shadow-lg border-b-4 border-[#39A900]">
+    <div class="relative overflow-hidden rounded-2xl bg-[#00324D] text-white p-8 shadow-sm border-b-4 border-[#39A900]">
         <div class="relative z-10 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#39A900] text-white text-xs font-bold uppercase tracking-wider mb-4">
-                <span>Convocatoria Presencial Abierta</span>
-            </div>
-            <h1 id="hero-heading" class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight mb-3">
-                 ¿Qué quieres aprender hoy en SkillHub?
+            <h1 id="hero-heading" class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+                Talleres disponibles
             </h1>
-            <p class="text-slate-200 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
-                Consulta nuestra oferta de talleres cortos presenciales, verifica los cupos disponibles en tiempo real e inscríbete de forma gratuita.
+            <p class="text-slate-200 text-sm sm:text-base mb-6 max-w-2xl">
+                Consulta los horarios, verifica los cupos disponibles e inscríbete en los próximos talleres presenciales.
             </p>
 
-            <!-- Search Input inside Hero like Betowa -->
             <div class="relative max-w-xl">
                 <svg class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -57,7 +52,6 @@
     </div>
 </section>
 
-<!-- Betowa Category Filter Bar -->
 <section aria-label="Filtrar por área de formación" class="mb-8">
     <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs flex items-center gap-2 overflow-x-auto">
         <span class="text-xs font-bold uppercase tracking-wider text-[#00324D] px-2 shrink-0">Áreas:</span>
@@ -75,7 +69,6 @@
     </div>
 </section>
 
-<!-- Betowa Course Cards Grid -->
 <section aria-label="Listado de talleres disponibles">
     @if (Model.Workshops.Count == 0)
     {
@@ -99,7 +92,6 @@
                          data-search="@($"{workshop.Code} {workshop.Title} {workshop.Description} {workshop.InstructorName} {workshop.InstructorSpecialty}".ToLowerInvariant())"
                          class="workshop-card bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between overflow-hidden">
 
-                    <!-- Betowa Card Header Band -->
                     <div>
                         <div class="bg-[#00324D] px-5 py-3 flex items-center justify-between">
                             <span class="text-xs font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded bg-[#39A900] text-white">
