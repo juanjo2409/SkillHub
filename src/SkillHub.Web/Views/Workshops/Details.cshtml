@@ -98,7 +98,24 @@
 
         @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Participant"))
         {
-            @if (hasSpots)
+            @if (ViewBag.ActiveEnrollmentId is Guid activeEnrollmentId)
+            {
+                <div class="space-y-3">
+                    <div class="p-3.5 rounded-xl bg-[#EBF7E5] border border-[#39A900]/40 text-[#00324D] text-xs font-bold flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-[#39A900] text-white flex items-center justify-center shrink-0">✓</span>
+                        <span>Ya tienes una inscripción activa en este taller</span>
+                    </div>
+                    <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@activeEnrollmentId"
+                       class="block text-center w-full py-3.5 px-5 rounded-xl bg-[#00324D] text-white font-bold text-sm hover:bg-[#002235] shadow-sm transition">
+                        ⬇ Descargar Constancia PDF
+                    </a>
+                    <a asp-controller="Enrollments" asp-action="Mine"
+                       class="block text-center w-full py-2.5 px-4 rounded-xl border border-slate-200 text-[#00324D] font-bold text-xs hover:bg-slate-50 transition">
+                        Gestionar en Mis Inscripciones →
+                    </a>
+                </div>
+            }
+            else if (hasSpots)
             {
                 <form asp-controller="Enrollments" asp-action="Create" method="post">
                     @Html.AntiForgeryToken()

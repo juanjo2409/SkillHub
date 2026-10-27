@@ -63,6 +63,27 @@ public class WorkshopsController : Controller
         try
         {
             var workshop = await _workshopService.GetByIdAsync(id, cancellationToken);
+
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Participant"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    try
+                    {
+                        var myEnrollments = await _enrollmentService.GetMyEnrollmentsAsync(userId, cancellationToken);
+                        var activeEnrollment = myEnrollments.FirstOrDefault(e => e.WorkshopId == id && e.Status == "Active");
+                        if (activeEnrollment is not null)
+                        {
+                            ViewBag.ActiveEnrollmentId = activeEnrollment.Id;
+                        }
+                    }
+                    catch (DomainException)
+                    {
+                    }
+                }
+            }
+
             return View(workshop);
         }
         catch (DomainException ex)

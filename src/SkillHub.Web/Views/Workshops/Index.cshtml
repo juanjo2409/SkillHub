@@ -202,6 +202,21 @@
                 </article>
             }
         </div>
+
+        <!-- Empty Search / Filter State -->
+        <div id="noSearchResults" class="hidden rounded-2xl bg-white border border-slate-200 p-12 text-center shadow-xs mt-4">
+            <div class="w-12 h-12 rounded-xl bg-[#EBF7E5] text-[#2D8600] flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <p class="text-lg font-extrabold text-[#00324D] mb-1">No se encontraron talleres con ese criterio</p>
+            <p class="text-sm text-slate-500 mb-5">Intenta con otra palabra clave o selecciona todas las áreas de formación.</p>
+            <button type="button" onclick="resetWorkshopFilters()"
+                    class="text-xs font-bold px-5 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
+                Limpiar búsqueda y filtros
+            </button>
+        </div>
     }
 </section>
 
@@ -222,13 +237,29 @@
 
         function filterWorkshops() {
             const query = (document.getElementById('workshopSearch')?.value || '').toLowerCase().trim();
+            let visibleCount = 0;
+
             document.querySelectorAll('.workshop-card').forEach(card => {
                 const spec = card.getAttribute('data-specialty') || '';
                 const text = card.getAttribute('data-search') || '';
                 const matchesSpec = currentSpecialty === 'ALL' || spec === currentSpecialty;
                 const matchesText = !query || text.includes(query);
-                card.style.display = (matchesSpec && matchesText) ? '' : 'none';
+                const isVisible = matchesSpec && matchesText;
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
             });
+
+            const emptyState = document.getElementById('noSearchResults');
+            if (emptyState) {
+                emptyState.classList.toggle('hidden', visibleCount > 0);
+            }
+        }
+
+        function resetWorkshopFilters() {
+            const searchInput = document.getElementById('workshopSearch');
+            if (searchInput) searchInput.value = '';
+            const firstPill = document.querySelector('.specialty-pill');
+            if (firstPill) setSpecialtyFilter('ALL', firstPill);
         }
     </script>
 }

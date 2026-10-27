@@ -130,6 +130,29 @@
                     }
                 </div>
             </div>
+
+            <!-- Mobile Responsive Navigation Bar -->
+            <nav aria-label="Navegación móvil" class="flex md:hidden items-center gap-2 pb-3 pt-1 border-t border-white/10 overflow-x-auto">
+                <a asp-controller="Workshops" asp-action="Index"
+                   class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/20 transition">
+                    Oferta de Talleres
+                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Participant"))
+                    {
+                        <a asp-controller="Enrollments" asp-action="Mine"
+                           class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/20 transition flex items-center gap-1.5">
+                            <span>Mis Inscripciones</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#39A900]"></span>
+                        </a>
+                    }
+                    <a asp-controller="Account" asp-action="Profile"
+                       class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/20 transition">
+                        Mi Perfil
+                    </a>
+                }
+            </nav>
         </div>
     </header>
 
