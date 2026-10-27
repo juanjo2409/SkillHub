@@ -95,6 +95,30 @@ public class WorkshopsController : Controller
 
     [HttpGet]
     [Authorize(Roles = "Employee")]
+    public async Task<IActionResult> Enrollments(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var workshop = await _workshopService.GetByIdAsync(id, cancellationToken);
+            var enrollments = await _workshopService.GetWorkshopEnrollmentsAsync(id, cancellationToken);
+
+            var viewModel = new WorkshopEnrollmentsViewModel
+            {
+                Workshop = workshop,
+                Enrollments = enrollments
+            };
+
+            return View(viewModel);
+        }
+        catch (DomainException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction("Profile", "Account");
+        }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Employee")]
     public async Task<IActionResult> ExportEnrollments(Guid id, CancellationToken cancellationToken)
     {
         try

@@ -80,31 +80,89 @@
                     <div class="space-y-4">
                         @foreach (var workshop in Model.MyInstructorWorkshops)
                         {
-                            <article class="rounded-xl border border-slate-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#39A900] transition">
-                                <div>
-                                    <div class="flex items-center gap-2.5 mb-1">
-                                        <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[#00324D] text-white">
-                                            @workshop.Code
-                                        </span>
-                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
-                                            @workshop.ActiveEnrollmentsCount / @workshop.MaxCapacity inscritos activos
-                                        </span>
+                            var students = Model.EnrollmentsByWorkshop.TryGetValue(workshop.Id, out var list)
+                                ? list
+                                : Array.Empty<SkillHub.Application.DTOs.Enrollments.EnrollmentResponseDto>();
+
+                            <article class="rounded-xl border border-slate-200 overflow-hidden hover:border-[#39A900] transition">
+                                <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                        <div class="flex items-center gap-2.5 mb-1">
+                                            <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[#00324D] text-white">
+                                                @workshop.Code
+                                            </span>
+                                            <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
+                                                @workshop.ActiveEnrollmentsCount / @workshop.MaxCapacity inscritos activos
+                                            </span>
+                                        </div>
+                                        <h3 class="text-lg font-extrabold text-[#00324D]">@workshop.Title</h3>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            Fecha: @workshop.StartDate.ToString("yyyy-MM-dd") • Horario: @workshop.StartDate.ToString("HH:mm") a @workshop.EndDate.ToString("HH:mm") UTC
+                                        </p>
                                     </div>
-                                    <h3 class="text-lg font-extrabold text-[#00324D]">@workshop.Title</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">
-                                        Fecha: @workshop.StartDate.ToString("yyyy-MM-dd") • Horario: @workshop.StartDate.ToString("HH:mm") a @workshop.EndDate.ToString("HH:mm") UTC
-                                    </p>
+
+                                    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                                        <a asp-controller="Workshops" asp-action="Enrollments" asp-route-id="@workshop.Id"
+                                           class="text-xs font-bold px-3.5 py-2 rounded-lg bg-[#00324D] text-white hover:bg-[#002235] transition">
+                                            Ver estudiantes (@students.Count)
+                                        </a>
+                                        <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@workshop.Id"
+                                           class="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
+                                            <span>⬇ Excel (.xlsx)</span>
+                                        </a>
+                                    </div>
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-3 shrink-0">
-                                    <a asp-controller="Workshops" asp-action="Details" asp-route-id="@workshop.Id"
-                                       class="text-xs font-bold px-3.5 py-2.5 rounded-lg border border-slate-200 text-[#00324D] hover:bg-slate-50 transition">
-                                        Ver Detalle
-                                    </a>
-                                    <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@workshop.Id"
-                                       class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
-                                        <span>⬇ Descargar Excel de Inscritos (.xlsx)</span>
-                                    </a>
+                                <div class="p-4 bg-white">
+                                    @if (students.Count == 0)
+                                    {
+                                        <p class="text-xs text-slate-500 py-2">Aún no hay estudiantes inscritos en este taller.</p>
+                                    }
+                                    else
+                                    {
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left border-collapse text-xs">
+                                                <thead>
+                                                    <tr class="text-slate-500 border-b border-slate-200 uppercase">
+                                                        <th class="py-2 px-3 font-bold">Estudiante</th>
+                                                        <th class="py-2 px-3 font-bold">Correo</th>
+                                                        <th class="py-2 px-3 font-bold">Fecha inscripción</th>
+                                                        <th class="py-2 px-3 font-bold text-center">Estado</th>
+                                                        <th class="py-2 px-3 font-bold text-right">Constancia</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-100">
+                                                    @foreach (var student in students)
+                                                    {
+                                                        var isStudentActive = student.Status == "Active";
+                                                        <tr>
+                                                            <td class="py-2.5 px-3 font-bold text-[#00324D]">@student.ParticipantName</td>
+                                                            <td class="py-2.5 px-3 text-slate-600">@student.ParticipantEmail</td>
+                                                            <td class="py-2.5 px-3 text-slate-500">@student.EnrollmentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                                            <td class="py-2.5 px-3 text-center">
+                                                                <span class="font-bold px-2 py-0.5 rounded @(isStudentActive ? "bg-[#EBF7E5] text-[#2D8600]" : "bg-slate-100 text-slate-500")">
+                                                                    @(isStudentActive ? "Activa" : "Cancelada")
+                                                                </span>
+                                                            </td>
+                                                            <td class="py-2.5 px-3 text-right">
+                                                                @if (isStudentActive)
+                                                                {
+                                                                    <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@student.Id"
+                                                                       class="font-bold text-[#00324D] hover:text-[#39A900] transition">
+                                                                        ⬇ PDF
+                                                                    </a>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-slate-400">—</span>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
                                 </div>
                             </article>
                         }
@@ -144,7 +202,11 @@
                                         @w.ActiveEnrollmentsCount / @w.MaxCapacity
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right">
+                                <td class="py-3 px-4 text-right space-x-2">
+                                    <a asp-controller="Workshops" asp-action="Enrollments" asp-route-id="@w.Id"
+                                       class="inline-block font-bold px-3 py-1.5 rounded bg-[#00324D] text-white hover:bg-[#002235] transition">
+                                        Ver inscritos
+                                    </a>
                                     <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@w.Id"
                                        class="inline-block font-bold px-3 py-1.5 rounded bg-[#39A900] text-white hover:bg-[#2D8600] transition">
                                         ⬇ Excel (.xlsx)
@@ -154,6 +216,46 @@
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Bulk Excel Import & Top Workshops Report for Employees -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-extrabold text-[#00324D] mb-1">Importación Masiva desde Excel</h2>
+                    <p class="text-xs text-slate-500 mb-4">
+                        Carga el archivo <code class="font-bold text-[#00324D]">SkillHub_Data.xlsx</code> (hoja <code class="font-bold">Enrollments</code>) para inscribir participantes automáticamente validando todas las reglas de negocio.
+                    </p>
+                </div>
+                <form asp-controller="Enrollments" asp-action="Import" method="post" enctype="multipart/form-data" class="space-y-3">
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="file" accept=".xlsx" required
+                           class="block w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#00324D] hover:file:bg-slate-200" />
+                    <button type="submit"
+                            class="w-full py-2.5 px-4 rounded-lg bg-[#39A900] text-white font-bold text-xs hover:bg-[#2D8600] transition">
+                        Importar Inscripciones desde Excel
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+                <h2 class="text-base font-extrabold text-[#00324D] mb-1">Top Talleres con Más Inscritos</h2>
+                <p class="text-xs text-slate-500 mb-4">Talleres ordenados de mayor a menor número de inscripciones activas.</p>
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    @foreach (var top in Model.TopWorkshops.Take(5))
+                    {
+                        <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                            <div>
+                                <span class="font-extrabold text-[#00324D]">@top.Code</span>
+                                <span class="font-semibold text-slate-700 ml-1.5">@top.Title</span>
+                            </div>
+                            <span class="font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
+                                @top.ActiveEnrollmentsCount / @top.MaxCapacity activos
+                            </span>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </section>

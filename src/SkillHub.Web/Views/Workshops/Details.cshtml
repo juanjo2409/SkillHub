@@ -143,8 +143,12 @@
         else
         {
             <div class="space-y-3">
+                <a asp-controller="Workshops" asp-action="Enrollments" asp-route-id="@Model.Id"
+                   class="block text-center w-full py-3.5 px-5 rounded-xl bg-[#00324D] text-white font-bold text-sm hover:bg-[#002235] shadow-sm transition">
+                    Ver Estudiantes Inscritos (@Model.ActiveEnrollmentsCount)
+                </a>
                 <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@Model.Id"
-                   class="block text-center w-full py-3.5 px-5 rounded-xl bg-[#39A900] text-white font-bold text-sm hover:bg-[#2D8600] shadow-sm transition">
+                   class="block text-center w-full py-3 px-5 rounded-xl bg-[#39A900] text-white font-bold text-xs hover:bg-[#2D8600] shadow-sm transition">
                     ⬇ Descargar Excel de Inscritos (.xlsx)
                 </a>
                 <p class="text-xs text-slate-500 text-center">

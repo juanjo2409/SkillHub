@@ -1,0 +1,150 @@
+@model SkillHub.Web.Models.WorkshopEnrollmentsViewModel
+@{
+    ViewData["Title"] = $"Inscritos — {Model.Workshop.Title}";
+    var activeEnrollments = Model.Enrollments.Where(e => e.Status == "Active").ToList();
+    var cancelledEnrollments = Model.Enrollments.Where(e => e.Status != "Active").ToList();
+}
+
+<nav aria-label="Breadcrumb" class="mb-6 flex items-center justify-between">
+    <a asp-controller="Account" asp-action="Profile"
+       class="inline-flex items-center gap-2 text-sm font-bold text-[#00324D] hover:text-[#39A900] transition">
+        <span>←</span>
+        <span>Volver al panel del instructor</span>
+    </a>
+
+    <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@Model.Workshop.Id"
+       class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
+        <span>⬇ Exportar listado en Excel (.xlsx)</span>
+    </a>
+</nav>
+
+<section class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs mb-8">
+    <div class="bg-[#00324D] px-6 py-5 border-b-4 border-[#39A900] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2.5 mb-1">
+                <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[#39A900] text-white">
+                    @Model.Workshop.Code
+                </span>
+                <span class="text-xs font-semibold text-slate-300">
+                    Instructor: @Model.Workshop.InstructorName (@Model.Workshop.InstructorSpecialty)
+                </span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white">@Model.Workshop.Title</h1>
+            <p class="text-xs text-slate-300 mt-1">
+                Fecha: @Model.Workshop.StartDate.ToString("yyyy-MM-dd") • Horario: @Model.Workshop.StartDate.ToString("HH:mm") a @Model.Workshop.EndDate.ToString("HH:mm") UTC
+            </p>
+        </div>
+
+        <div class="flex items-center gap-4 bg-white/10 rounded-xl px-4 py-3 text-white shrink-0">
+            <div class="text-center px-2">
+                <p class="text-xl font-extrabold text-[#8CE558]">@activeEnrollments.Count</p>
+                <p class="text-[11px] text-slate-300">Activos</p>
+            </div>
+            <div class="h-8 w-px bg-white/15"></div>
+            <div class="text-center px-2">
+                <p class="text-xl font-extrabold text-white">@Model.Workshop.AvailableSpots</p>
+                <p class="text-[11px] text-slate-300">Cupos libres</p>
+            </div>
+            <div class="h-8 w-px bg-white/15"></div>
+            <div class="text-center px-2">
+                <p class="text-xl font-extrabold text-slate-200">@Model.Workshop.MaxCapacity</p>
+                <p class="text-[11px] text-slate-300">Cupo máx.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 class="text-base font-extrabold text-[#00324D]">
+                Estudiantes registrados en este taller (@Model.Enrollments.Count)
+            </h2>
+            <span class="text-xs text-slate-500">
+                Activos: <strong>@activeEnrollments.Count</strong> • Cancelados: <strong>@cancelledEnrollments.Count</strong>
+            </span>
+        </div>
+
+        @if (Model.Enrollments.Count == 0)
+        {
+            <div class="p-10 text-center rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-sm font-bold text-[#00324D] mb-1">Aún no hay estudiantes inscritos en este taller</p>
+                <p class="text-xs text-slate-500">Cuando los participantes se inscriban o se importe el archivo Excel aparecerán aquí.</p>
+            </div>
+        }
+        else
+        {
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 text-[#00324D] uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-3.5 px-4 font-bold">#</th>
+                            <th class="py-3.5 px-4 font-bold">Estudiante</th>
+                            <th class="py-3.5 px-4 font-bold">Correo electrónico</th>
+                            <th class="py-3.5 px-4 font-bold">Fecha inscripción</th>
+                            <th class="py-3.5 px-4 font-bold text-center">Estado</th>
+                            <th class="py-3.5 px-4 font-bold text-right">Acciones (Empleado)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @{
+                            var rowNum = 1;
+                        }
+                        @foreach (var enrollment in Model.Enrollments)
+                        {
+                            var isActive = enrollment.Status == "Active";
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-3.5 px-4 font-bold text-slate-400">@rowNum</td>
+                                <td class="py-3.5 px-4 font-bold text-[#00324D]">@enrollment.ParticipantName</td>
+                                <td class="py-3.5 px-4 text-slate-600">@enrollment.ParticipantEmail</td>
+                                <td class="py-3.5 px-4 text-slate-600">@enrollment.EnrollmentDate.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                                <td class="py-3.5 px-4 text-center">
+                                    @if (isActive)
+                                    {
+                                        <span class="font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
+                                            Activa
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <div>
+                                            <span class="font-bold px-2.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                                                Cancelada
+                                            </span>
+                                            @if (enrollment.CancelledAt.HasValue)
+                                            {
+                                                <p class="text-[10px] text-rose-600 mt-0.5">@enrollment.CancelledAt.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    @if (isActive)
+                                    {
+                                        <div class="inline-flex items-center gap-2">
+                                            <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@enrollment.Id"
+                                               class="font-bold px-3 py-1.5 rounded bg-[#00324D] text-white hover:bg-[#002235] transition">
+                                                ⬇ PDF
+                                            </a>
+                                            <form asp-controller="Enrollments" asp-action="Cancel" asp-route-id="@enrollment.Id" method="post" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="workshopId" value="@Model.Workshop.Id" />
+                                                <button type="submit"
+                                                        class="font-bold px-3 py-1.5 rounded bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
+                                                    Cancelar cupo
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-400">Sin acciones</span>
+                                    }
+                                </td>
+                            </tr>
+                            rowNum++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

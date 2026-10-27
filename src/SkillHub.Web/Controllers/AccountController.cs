@@ -41,13 +41,22 @@ public class AccountController : Controller
         IReadOnlyList<EnrollmentResponseDto> myEnrollments = Array.Empty<EnrollmentResponseDto>();
         IReadOnlyList<WorkshopResponseDto> myWorkshops = Array.Empty<WorkshopResponseDto>();
         IReadOnlyList<WorkshopResponseDto> allWorkshops = Array.Empty<WorkshopResponseDto>();
+        IReadOnlyList<TopWorkshopResponseDto> topWorkshops = Array.Empty<TopWorkshopResponseDto>();
+        var enrollmentsByWorkshop = new Dictionary<Guid, IReadOnlyList<EnrollmentResponseDto>>();
 
         if (role == "Employee")
         {
             allWorkshops = await _workshopService.GetUpcomingCatalogAsync(cancellationToken);
+            topWorkshops = await _workshopService.GetTopWorkshopsAsync(cancellationToken);
             myWorkshops = allWorkshops
                 .Where(w => string.Equals(w.InstructorEmail, email, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            foreach (var workshop in myWorkshops)
+            {
+                var workshopEnrollments = await _workshopService.GetWorkshopEnrollmentsAsync(workshop.Id, cancellationToken);
+                enrollmentsByWorkshop[workshop.Id] = workshopEnrollments;
+            }
         }
         else
         {
@@ -67,7 +76,9 @@ public class AccountController : Controller
             Role = role,
             MyEnrollments = myEnrollments,
             MyInstructorWorkshops = myWorkshops,
-            AllWorkshops = allWorkshops
+            EnrollmentsByWorkshop = enrollmentsByWorkshop,
+            AllWorkshops = allWorkshops,
+            TopWorkshops = topWorkshops
         };
 
         return View(profileVm);

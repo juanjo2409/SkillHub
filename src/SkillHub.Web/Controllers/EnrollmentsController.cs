@@ -57,7 +57,7 @@ public class EnrollmentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Cancel(Guid id, Guid? workshopId, CancellationToken cancellationToken)
     {
         try
         {
@@ -72,7 +72,37 @@ public class EnrollmentsController : Controller
             TempData["ErrorMessage"] = ex.Message;
         }
 
+        if (workshopId.HasValue && User.IsInRole("Employee"))
+        {
+            return RedirectToAction("Enrollments", "Workshops", new { id = workshopId.Value });
+        }
+
         return RedirectToAction(nameof(Mine));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Employee")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Import(IFormFile? file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Debes seleccionar un archivo Excel (.xlsx) válido.";
+            return RedirectToAction("Profile", "Account");
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var result = await _enrollmentService.ImportFromExcelAsync(stream, cancellationToken);
+            TempData["SuccessMessage"] = $"Importación completada: {result.TotalEnrolled} inscritos exitosamente y {result.RejectedRows.Count} filas rechazadas.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error al procesar el archivo Excel: {ex.Message}";
+        }
+
+        return RedirectToAction("Profile", "Account");
     }
 
     [HttpGet]
