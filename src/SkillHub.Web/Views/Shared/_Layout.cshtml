@@ -122,10 +122,78 @@
         @RenderBody()
     </main>
 
-    <footer class="bg-[#00324D] text-slate-300 border-t-2 border-[#39A900] mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-            <p class="font-medium text-white">SkillHub — Gestión de talleres e inscripciones</p>
-            <p class="text-slate-400">&copy; @DateTime.UtcNow.Year SkillHub</p>
+    <footer class="bg-[#00324D] text-slate-300 border-t-4 border-[#39A900] mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-white/10">
+                <div class="md:col-span-5 space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-[#39A900] text-white text-xs font-bold flex items-center justify-center">
+                            SH
+                        </span>
+                        <span class="text-lg font-bold text-white tracking-tight">SkillHub</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed max-w-sm">
+                        Plataforma para la programación de talleres cortos presenciales, consulta de cupos en tiempo real, gestión de inscripciones y descarga de certificados en PDF.
+                    </p>
+                </div>
+
+                <div class="md:col-span-3 space-y-2.5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Navegación</h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li>
+                            <a asp-controller="Workshops" asp-action="Index" class="hover:text-[#8CE558] transition">
+                                Talleres disponibles
+                            </a>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Participant"))
+                            {
+                                <li>
+                                    <a asp-controller="Enrollments" asp-action="Mine" class="hover:text-[#8CE558] transition">
+                                        Mis inscripciones
+                                    </a>
+                                </li>
+                            }
+                            <li>
+                                <a asp-controller="Account" asp-action="Profile" class="hover:text-[#8CE558] transition">
+                                    Mi perfil
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li>
+                                <a asp-controller="Account" asp-action="Login" class="hover:text-[#8CE558] transition">
+                                    Iniciar sesión
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Account" asp-action="Register" class="hover:text-[#8CE558] transition">
+                                    Crear cuenta de participante
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="md:col-span-4 space-y-2.5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Áreas de talleres</h3>
+                    <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Fotografía</span>
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Cocina</span>
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Oratoria</span>
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Diseño gráfico</span>
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Música</span>
+                        <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">Marketing digital</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <p>&copy; @DateTime.UtcNow.Year SkillHub. Todos los derechos reservados.</p>
+                <p>Centro de formación presencial</p>
+            </div>
         </div>
     </footer>
 
