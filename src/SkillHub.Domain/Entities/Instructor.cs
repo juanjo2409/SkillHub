@@ -23,4 +23,12 @@ public class Instructor : PersonBase
 
         Specialty = specialty.Trim();
     }
+
+    public void UpdateSpecialty(string specialty)
+    {
+        if (string.IsNullOrWhiteSpace(specialty))
+            throw new DomainValidationException(UserErrors.EmptySpecialty);
+
+        Specialty = specialty.Trim();
+    }
 }

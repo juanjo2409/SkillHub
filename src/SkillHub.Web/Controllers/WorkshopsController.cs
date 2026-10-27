@@ -113,7 +113,7 @@ public class WorkshopsController : Controller
         catch (DomainException ex)
         {
             TempData["ErrorMessage"] = ex.Message;
-            return RedirectToAction("Profile", "Account");
+            return RedirectToAction("Students", "Account");
         }
     }
 
@@ -129,7 +129,7 @@ public class WorkshopsController : Controller
         catch (DomainException ex)
         {
             TempData["ErrorMessage"] = ex.Message;
-            return RedirectToAction("Profile", "Account");
+            return RedirectToAction("Students", "Account");
         }
     }
 

@@ -106,6 +106,77 @@ public class AuthService : IAuthService
         return GenerateJwtToken(identityUser, fullName, role);
     }
 
+    public async Task<(string FullName, string Email, string Role, string? Specialty)> GetUserProfileAsync(
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId)
+            ?? throw new DomainValidationException("User not found.");
+
+        var roles = await _userManager.GetRolesAsync(identityUser);
+        var role = roles.FirstOrDefault() ?? "Participant";
+        var email = identityUser.Email ?? string.Empty;
+
+        if (role == "Employee")
+        {
+            var instructor = await _instructorRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
+            return (instructor?.FullName ?? email, email, role, instructor?.Specialty);
+        }
+
+        var participant = await _participantRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
+        return (participant?.FullName ?? email, email, role, null);
+    }
+
+    public async Task UpdateUserProfileAsync(
+        string identityUserId,
+        string fullName,
+        string? specialty,
+        string? currentPassword,
+        string? newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId)
+            ?? throw new DomainValidationException("User not found.");
+
+        var roles = await _userManager.GetRolesAsync(identityUser);
+        var role = roles.FirstOrDefault() ?? "Participant";
+
+        if (role == "Employee")
+        {
+            var instructor = await _instructorRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken)
+                ?? throw new DomainValidationException("Instructor profile not found.");
+
+            instructor.UpdateFullName(fullName);
+            if (!string.IsNullOrWhiteSpace(specialty))
+            {
+                instructor.UpdateSpecialty(specialty);
+            }
+
+            await _instructorRepository.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            var participant = await _participantRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken)
+                ?? throw new DomainValidationException("Participant profile not found.");
+
+            participant.UpdateFullName(fullName);
+            await _participantRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(newPassword))
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword))
+                throw new DomainValidationException("Debes ingresar tu contraseña actual para cambiar la contraseña.");
+
+            var passwordResult = await _userManager.ChangePasswordAsync(identityUser, currentPassword, newPassword);
+            if (!passwordResult.Succeeded)
+            {
+                var errors = string.Join("; ", passwordResult.Errors.Select(e => e.Description));
+                throw new DomainValidationException(errors);
+            }
+        }
+    }
+
     private AuthResponseDto GenerateJwtToken(IdentityUser user, string fullName, string role)
     {
         var secretKey = _configuration["JwtSettings:SecretKey"]

@@ -34,54 +34,97 @@ public class AccountController : Controller
     public async Task<IActionResult> Profile(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-        var fullName = User.Identity?.Name ?? "Usuario";
+
+        try
+        {
+            var profile = await _authService.GetUserProfileAsync(userId, cancellationToken);
+            return View(new UserProfileViewModel
+            {
+                FullName = profile.FullName,
+                Email = profile.Email,
+                Role = profile.Role,
+                Specialty = profile.Specialty
+            });
+        }
+        catch (DomainException)
+        {
+            return View(new UserProfileViewModel
+            {
+                FullName = User.Identity?.Name ?? "Usuario",
+                Email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
+                Role = User.IsInRole("Employee") ? "Employee" : "Participant"
+            });
+        }
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(UserProfileViewModel model, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
         var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         var role = User.IsInRole("Employee") ? "Employee" : "Participant";
 
-        IReadOnlyList<EnrollmentResponseDto> myEnrollments = Array.Empty<EnrollmentResponseDto>();
-        IReadOnlyList<WorkshopResponseDto> myWorkshops = Array.Empty<WorkshopResponseDto>();
-        IReadOnlyList<WorkshopResponseDto> allWorkshops = Array.Empty<WorkshopResponseDto>();
-        IReadOnlyList<TopWorkshopResponseDto> topWorkshops = Array.Empty<TopWorkshopResponseDto>();
+        model.Email = email;
+        model.Role = role;
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        try
+        {
+            await _authService.UpdateUserProfileAsync(
+                userId,
+                model.FullName,
+                model.Specialty,
+                model.CurrentPassword,
+                model.NewPassword,
+                cancellationToken);
+
+            await RefreshUserCookieAsync(userId, model.FullName.Trim(), email, role);
+            TempData["SuccessMessage"] = "Los datos de tu perfil se actualizaron correctamente.";
+            return RedirectToAction(nameof(Profile));
+        }
+        catch (DomainException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(model);
+        }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Employee")]
+    public async Task<IActionResult> Students(CancellationToken cancellationToken)
+    {
+        var fullName = User.Identity?.Name ?? "Instructor";
+        var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
+        var allWorkshops = await _workshopService.GetUpcomingCatalogAsync(cancellationToken);
+        var topWorkshops = await _workshopService.GetTopWorkshopsAsync(cancellationToken);
+        var myWorkshops = allWorkshops
+            .Where(w => string.Equals(w.InstructorEmail, email, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
         var enrollmentsByWorkshop = new Dictionary<Guid, IReadOnlyList<EnrollmentResponseDto>>();
-
-        if (role == "Employee")
+        foreach (var workshop in myWorkshops)
         {
-            allWorkshops = await _workshopService.GetUpcomingCatalogAsync(cancellationToken);
-            topWorkshops = await _workshopService.GetTopWorkshopsAsync(cancellationToken);
-            myWorkshops = allWorkshops
-                .Where(w => string.Equals(w.InstructorEmail, email, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            foreach (var workshop in myWorkshops)
-            {
-                var workshopEnrollments = await _workshopService.GetWorkshopEnrollmentsAsync(workshop.Id, cancellationToken);
-                enrollmentsByWorkshop[workshop.Id] = workshopEnrollments;
-            }
-        }
-        else
-        {
-            try
-            {
-                myEnrollments = await _enrollmentService.GetMyEnrollmentsAsync(userId, cancellationToken);
-            }
-            catch (DomainException)
-            {
-            }
+            var workshopEnrollments = await _workshopService.GetWorkshopEnrollmentsAsync(workshop.Id, cancellationToken);
+            enrollmentsByWorkshop[workshop.Id] = workshopEnrollments;
         }
 
-        var profileVm = new UserProfileViewModel
+        var vm = new UserProfileViewModel
         {
             FullName = fullName,
             Email = email,
-            Role = role,
-            MyEnrollments = myEnrollments,
+            Role = "Employee",
             MyInstructorWorkshops = myWorkshops,
             EnrollmentsByWorkshop = enrollmentsByWorkshop,
             AllWorkshops = allWorkshops,
             TopWorkshops = topWorkshops
         };
 
-        return View(profileVm);
+        return View(vm);
     }
 
     [HttpGet]
@@ -110,7 +153,9 @@ public class AccountController : Controller
 
             await SignInWithCookieAsync(response);
             TempData["SuccessMessage"] = $"Bienvenido de nuevo, {response.FullName}.";
-            return RedirectToAction("Profile", "Account");
+            return response.Role == "Employee"
+                ? RedirectToAction(nameof(Students))
+                : RedirectToAction("Index", "Workshops");
         }
         catch (DomainException ex)
         {
@@ -145,7 +190,7 @@ public class AccountController : Controller
 
             await SignInWithCookieAsync(response);
             TempData["SuccessMessage"] = $"Cuenta creada exitosamente. ¡Bienvenido a SkillHub, {response.FullName}!";
-            return RedirectToAction("Profile", "Account");
+            return RedirectToAction("Index", "Workshops");
         }
         catch (DomainException ex)
         {
@@ -170,12 +215,17 @@ public class AccountController : Controller
         var userId = jwt.Claims.FirstOrDefault(c =>
             c.Type == ClaimTypes.NameIdentifier || c.Type == JwtRegisteredClaimNames.Sub)?.Value ?? string.Empty;
 
+        await RefreshUserCookieAsync(userId, authResponse.FullName, authResponse.Email, authResponse.Role);
+    }
+
+    private async Task RefreshUserCookieAsync(string userId, string fullName, string email, string role)
+    {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, userId),
-            new(ClaimTypes.Name, authResponse.FullName),
-            new(ClaimTypes.Email, authResponse.Email),
-            new(ClaimTypes.Role, authResponse.Role)
+            new(ClaimTypes.Name, fullName),
+            new(ClaimTypes.Email, email),
+            new(ClaimTypes.Role, role)
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

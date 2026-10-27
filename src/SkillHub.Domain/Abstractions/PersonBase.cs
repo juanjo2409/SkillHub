@@ -29,4 +29,12 @@ public abstract class PersonBase : BaseEntity, IPerson
     {
         IdentityUserId = identityUserId.Trim();
     }
+
+    public void UpdateFullName(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            throw new DomainValidationException(UserErrors.EmptyFullName);
+
+        FullName = fullName.Trim();
+    }
 }

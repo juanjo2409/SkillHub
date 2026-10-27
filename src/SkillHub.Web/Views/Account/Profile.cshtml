@@ -1,332 +1,102 @@
 @model SkillHub.Web.Models.UserProfileViewModel
 @{
-    ViewData["Title"] = "Mi Perfil";
+    ViewData["Title"] = "Configuración de Perfil";
     var initial = !string.IsNullOrEmpty(Model.FullName) ? Model.FullName.Substring(0, 1).ToUpperInvariant() : "U";
-    var activeEnrollmentsCount = Model.MyEnrollments.Count(e => e.Status == "Active");
 }
 
-<section aria-labelledby="profile-heading" class="mb-8">
-    <div class="bg-[#00324D] rounded-2xl border-b-4 border-[#39A900] p-8 text-white shadow-md">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-5">
-                <div class="w-16 h-16 rounded-2xl bg-[#39A900] text-white text-2xl font-extrabold flex items-center justify-center shadow-lg shrink-0">
-                    @initial
-                </div>
-                <div>
-                    <div class="flex flex-wrap items-center gap-2.5 mb-1">
-                        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#39A900] text-white">
-                            @(Model.IsEmployee ? "Instructor / Empleado" : "Participante / Aprendiz")
-                        </span>
-                        <span class="text-xs text-[#8CE558] font-semibold">● Cuenta Verificada</span>
-                    </div>
-                    <h1 id="profile-heading" class="text-2xl sm:text-3xl font-extrabold text-white">@Model.FullName</h1>
-                    <p class="text-sm text-slate-300 mt-0.5">@Model.Email</p>
-                </div>
+<section aria-labelledby="profile-settings-heading" class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-[#00324D] rounded-2xl border-b-4 border-[#39A900] p-6 sm:p-8 text-white shadow-xs">
+        <div class="flex items-center gap-5">
+            <div class="w-14 h-14 rounded-xl bg-[#39A900] text-white text-xl font-extrabold flex items-center justify-center shrink-0">
+                @initial
             </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-                <a asp-controller="Workshops" asp-action="Index"
-                   class="text-xs font-bold px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition">
-                    Ver Catálogo de Talleres
-                </a>
-                @if (!Model.IsEmployee)
-                {
-                    <a asp-controller="Enrollments" asp-action="Mine"
-                       class="text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
-                        Gestionar Mis Inscripciones
-                    </a>
-                }
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-white/15 text-white">
+                    @(Model.IsEmployee ? "Instructor / Empleado" : "Participante")
+                </span>
+                <h1 id="profile-settings-heading" class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+                    Configuración de Perfil
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-300">@Model.Email</p>
             </div>
         </div>
     </div>
-</section>
 
-@if (Model.IsEmployee)
-{
-    <!-- Instructor / Employee Dashboard with Excel Export per Workshop -->
-    <section aria-labelledby="instructor-panel-heading" class="space-y-8">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Talleres Asignados</p>
-                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@Model.MyInstructorWorkshops.Count</p>
-            </div>
-            <div class="bg-white rounded-xl border-l-4 border-[#00324D] border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Inscritos en Mis Talleres</p>
-                <p class="text-3xl font-extrabold text-[#2D8600] mt-1">@Model.MyInstructorWorkshops.Sum(w => w.ActiveEnrollmentsCount)</p>
-            </div>
-            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Talleres del Centro</p>
-                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@Model.AllWorkshops.Count</p>
-            </div>
-        </div>
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+        <h2 class="text-base font-extrabold text-[#00324D] mb-1">Información Personal</h2>
+        <p class="text-xs text-slate-500 mb-6">
+            Actualiza tu nombre completo @(Model.IsEmployee ? "y tu especialidad como instructor" : "") o cambia tu contraseña de acceso.
+        </p>
 
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-            <div class="bg-[#00324D] px-6 py-4 border-b-2 border-[#39A900] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <form asp-controller="Account" asp-action="Profile" method="post" class="space-y-5">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg p-3"></div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <h2 id="instructor-panel-heading" class="text-base font-extrabold text-white">
-                        Mis Talleres Dictados — Descarga de Alumnos Inscritos en Excel
-                    </h2>
-                    <p class="text-xs text-slate-300">Descarga la planilla oficial en Excel (.xlsx) con el listado de aprendices inscritos en cada taller.</p>
+                    <label asp-for="FullName" class="block text-xs font-bold uppercase tracking-wider text-[#00324D] mb-1.5">
+                        Nombre completo
+                    </label>
+                    <input asp-for="FullName" type="text"
+                           class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-[#39A900] focus:outline-none" />
+                    <span asp-validation-for="FullName" class="text-xs text-rose-600 mt-1 block"></span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Correo electrónico (No editable)
+                    </label>
+                    <input type="email" value="@Model.Email" disabled
+                           class="w-full rounded-lg border border-slate-200 bg-slate-100 text-slate-500 px-4 py-2.5 text-sm cursor-not-allowed" />
                 </div>
             </div>
 
-            <div class="p-6">
-                @if (Model.MyInstructorWorkshops.Count == 0)
-                {
-                    <p class="text-sm text-slate-500">No tienes talleres asignados directamente a tu correo.</p>
-                }
-                else
-                {
-                    <div class="space-y-4">
-                        @foreach (var workshop in Model.MyInstructorWorkshops)
-                        {
-                            var students = Model.EnrollmentsByWorkshop.TryGetValue(workshop.Id, out var list)
-                                ? list
-                                : Array.Empty<SkillHub.Application.DTOs.Enrollments.EnrollmentResponseDto>();
+            @if (Model.IsEmployee)
+            {
+                <div>
+                    <label asp-for="Specialty" class="block text-xs font-bold uppercase tracking-wider text-[#00324D] mb-1.5">
+                        Especialidad del Instructor
+                    </label>
+                    <input asp-for="Specialty" type="text" placeholder="Ej. Fotografía, Cocina, Oratoria..."
+                           class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-[#39A900] focus:outline-none" />
+                    <span asp-validation-for="Specialty" class="text-xs text-rose-600 mt-1 block"></span>
+                </div>
+            }
 
-                            <article class="rounded-xl border border-slate-200 overflow-hidden hover:border-[#39A900] transition">
-                                <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div>
-                                        <div class="flex items-center gap-2.5 mb-1">
-                                            <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded bg-[#00324D] text-white">
-                                                @workshop.Code
-                                            </span>
-                                            <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
-                                                @workshop.ActiveEnrollmentsCount / @workshop.MaxCapacity inscritos activos
-                                            </span>
-                                        </div>
-                                        <h3 class="text-lg font-extrabold text-[#00324D]">@workshop.Title</h3>
-                                        <p class="text-xs text-slate-500 mt-0.5">
-                                            Fecha: @workshop.StartDate.ToString("yyyy-MM-dd") • Horario: @workshop.StartDate.ToString("HH:mm") a @workshop.EndDate.ToString("HH:mm") UTC
-                                        </p>
-                                    </div>
+            <div class="pt-5 border-t border-slate-200">
+                <h3 class="text-sm font-extrabold text-[#00324D] mb-1">Cambiar Contraseña (Opcional)</h3>
+                <p class="text-xs text-slate-500 mb-4">Deja estos campos en blanco si no deseas modificar tu contraseña actual.</p>
 
-                                    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                                        <a asp-controller="Workshops" asp-action="Enrollments" asp-route-id="@workshop.Id"
-                                           class="text-xs font-bold px-3.5 py-2 rounded-lg bg-[#00324D] text-white hover:bg-[#002235] transition">
-                                            Ver estudiantes (@students.Count)
-                                        </a>
-                                        <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@workshop.Id"
-                                           class="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
-                                            <span>⬇ Excel (.xlsx)</span>
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div class="p-4 bg-white">
-                                    @if (students.Count == 0)
-                                    {
-                                        <p class="text-xs text-slate-500 py-2">Aún no hay estudiantes inscritos en este taller.</p>
-                                    }
-                                    else
-                                    {
-                                        <div class="overflow-x-auto">
-                                            <table class="w-full text-left border-collapse text-xs">
-                                                <thead>
-                                                    <tr class="text-slate-500 border-b border-slate-200 uppercase">
-                                                        <th class="py-2 px-3 font-bold">Estudiante</th>
-                                                        <th class="py-2 px-3 font-bold">Correo</th>
-                                                        <th class="py-2 px-3 font-bold">Fecha inscripción</th>
-                                                        <th class="py-2 px-3 font-bold text-center">Estado</th>
-                                                        <th class="py-2 px-3 font-bold text-right">Constancia</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="divide-y divide-slate-100">
-                                                    @foreach (var student in students)
-                                                    {
-                                                        var isStudentActive = student.Status == "Active";
-                                                        <tr>
-                                                            <td class="py-2.5 px-3 font-bold text-[#00324D]">@student.ParticipantName</td>
-                                                            <td class="py-2.5 px-3 text-slate-600">@student.ParticipantEmail</td>
-                                                            <td class="py-2.5 px-3 text-slate-500">@student.EnrollmentDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                                            <td class="py-2.5 px-3 text-center">
-                                                                <span class="font-bold px-2 py-0.5 rounded @(isStudentActive ? "bg-[#EBF7E5] text-[#2D8600]" : "bg-slate-100 text-slate-500")">
-                                                                    @(isStudentActive ? "Activa" : "Cancelada")
-                                                                </span>
-                                                            </td>
-                                                            <td class="py-2.5 px-3 text-right">
-                                                                @if (isStudentActive)
-                                                                {
-                                                                    <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@student.Id"
-                                                                       class="font-bold text-[#00324D] hover:text-[#39A900] transition">
-                                                                        ⬇ PDF
-                                                                    </a>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <span class="text-slate-400">—</span>
-                                                                }
-                                                            </td>
-                                                        </tr>
-                                                    }
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    }
-                                </div>
-                            </article>
-                        }
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label asp-for="CurrentPassword" class="block text-xs font-bold uppercase tracking-wider text-[#00324D] mb-1.5">
+                            Contraseña actual
+                        </label>
+                        <input asp-for="CurrentPassword" type="password" placeholder="••••••••"
+                               class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-[#39A900] focus:outline-none" />
                     </div>
-                }
-            </div>
-        </div>
 
-        <!-- All Center Workshops Table for Employees -->
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
-                <h2 class="text-base font-extrabold text-[#00324D]">Todos los Talleres de SkillHub (Control General de Empleados)</h2>
-                <p class="text-xs text-slate-500">Como empleado de SkillHub puedes exportar el listado de inscritos de cualquier taller del centro.</p>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-[#00324D] text-white uppercase tracking-wider">
-                            <th class="py-3 px-4 font-bold">Código</th>
-                            <th class="py-3 px-4 font-bold">Taller</th>
-                            <th class="py-3 px-4 font-bold">Instructor</th>
-                            <th class="py-3 px-4 font-bold">Fecha</th>
-                            <th class="py-3 px-4 font-bold text-center">Inscritos / Cupo</th>
-                            <th class="py-3 px-4 font-bold text-right">Reporte Excel</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        @foreach (var w in Model.AllWorkshops)
-                        {
-                            <tr class="hover:bg-slate-50">
-                                <td class="py-3 px-4 font-extrabold text-[#00324D]">@w.Code</td>
-                                <td class="py-3 px-4 font-semibold text-slate-800">@w.Title</td>
-                                <td class="py-3 px-4 text-slate-600">@w.InstructorName</td>
-                                <td class="py-3 px-4 text-slate-600">@w.StartDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td class="py-3 px-4 text-center">
-                                    <span class="font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
-                                        @w.ActiveEnrollmentsCount / @w.MaxCapacity
-                                    </span>
-                                </td>
-                                <td class="py-3 px-4 text-right space-x-2">
-                                    <a asp-controller="Workshops" asp-action="Enrollments" asp-route-id="@w.Id"
-                                       class="inline-block font-bold px-3 py-1.5 rounded bg-[#00324D] text-white hover:bg-[#002235] transition">
-                                        Ver inscritos
-                                    </a>
-                                    <a asp-controller="Workshops" asp-action="ExportEnrollments" asp-route-id="@w.Id"
-                                       class="inline-block font-bold px-3 py-1.5 rounded bg-[#39A900] text-white hover:bg-[#2D8600] transition">
-                                        ⬇ Excel (.xlsx)
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Bulk Excel Import & Top Workshops Report for Employees -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between">
-                <div>
-                    <h2 class="text-base font-extrabold text-[#00324D] mb-1">Importación Masiva desde Excel</h2>
-                    <p class="text-xs text-slate-500 mb-4">
-                        Carga el archivo <code class="font-bold text-[#00324D]">SkillHub_Data.xlsx</code> (hoja <code class="font-bold">Enrollments</code>) para inscribir participantes automáticamente validando todas las reglas de negocio.
-                    </p>
-                </div>
-                <form asp-controller="Enrollments" asp-action="Import" method="post" enctype="multipart/form-data" class="space-y-3">
-                    @Html.AntiForgeryToken()
-                    <input type="file" name="file" accept=".xlsx" required
-                           class="block w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-[#00324D] hover:file:bg-slate-200" />
-                    <button type="submit"
-                            class="w-full py-2.5 px-4 rounded-lg bg-[#39A900] text-white font-bold text-xs hover:bg-[#2D8600] transition">
-                        Importar Inscripciones desde Excel
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
-                <h2 class="text-base font-extrabold text-[#00324D] mb-1">Top Talleres con Más Inscritos</h2>
-                <p class="text-xs text-slate-500 mb-4">Talleres ordenados de mayor a menor número de inscripciones activas.</p>
-                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    @foreach (var top in Model.TopWorkshops.Take(5))
-                    {
-                        <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-                            <div>
-                                <span class="font-extrabold text-[#00324D]">@top.Code</span>
-                                <span class="font-semibold text-slate-700 ml-1.5">@top.Title</span>
-                            </div>
-                            <span class="font-bold px-2.5 py-0.5 rounded bg-[#EBF7E5] text-[#2D8600]">
-                                @top.ActiveEnrollmentsCount / @top.MaxCapacity activos
-                            </span>
-                        </div>
-                    }
+                    <div>
+                        <label asp-for="NewPassword" class="block text-xs font-bold uppercase tracking-wider text-[#00324D] mb-1.5">
+                            Nueva contraseña
+                        </label>
+                        <input asp-for="NewPassword" type="password" placeholder="Mínimo 6 caracteres y un número"
+                               class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-[#39A900] focus:outline-none" />
+                        <span asp-validation-for="NewPassword" class="text-xs text-rose-600 mt-1 block"></span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-}
-else
-{
-    <!-- Participant Profile Summary -->
-    <section aria-labelledby="participant-summary-heading" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border-l-4 border-[#39A900] border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Talleres Activos</p>
-                <p class="text-3xl font-extrabold text-[#2D8600] mt-1">@activeEnrollmentsCount</p>
-            </div>
-            <div class="bg-white rounded-xl border-l-4 border-[#00324D] border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Constancias en PDF</p>
-                <p class="text-3xl font-extrabold text-[#00324D] mt-1">@activeEnrollmentsCount</p>
-            </div>
-            <div class="bg-white rounded-xl border-l-4 border-slate-400 border border-slate-200 p-5 shadow-xs">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Histórico</p>
-                <p class="text-3xl font-extrabold text-slate-700 mt-1">@Model.MyEnrollments.Count</p>
-            </div>
-        </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <h2 id="participant-summary-heading" class="text-lg font-extrabold text-[#00324D]">Resumen de Mis Inscripciones Recientes</h2>
-                <a asp-controller="Enrollments" asp-action="Mine" class="text-xs font-bold text-[#39A900] hover:underline">
-                    Ver panel completo →
+            <div class="pt-4 flex items-center justify-end gap-3">
+                <a asp-controller="Workshops" asp-action="Index"
+                   class="text-xs font-bold px-4 py-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">
+                    Cancelar
                 </a>
+                <button type="submit"
+                        class="text-xs font-bold px-6 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] shadow-xs transition">
+                    Guardar cambios
+                </button>
             </div>
-
-            @if (Model.MyEnrollments.Count == 0)
-            {
-                <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-sm font-bold text-[#00324D] mb-1">Aún no te has inscrito en ningún taller</p>
-                    <p class="text-xs text-slate-500 mb-4">Explora el catálogo e inscríbete para descargar tu constancia en PDF.</p>
-                    <a asp-controller="Workshops" asp-action="Index"
-                       class="inline-block text-xs font-bold px-4 py-2.5 rounded-lg bg-[#39A900] text-white hover:bg-[#2D8600] transition">
-                        Ir a Oferta de Talleres
-                    </a>
-                </div>
-            }
-            else
-            {
-                <div class="space-y-3">
-                    @foreach (var enrollment in Model.MyEnrollments)
-                    {
-                        var isActive = enrollment.Status == "Active";
-                        <div class="p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-[#00324D] text-white">@enrollment.WorkshopCode</span>
-                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded @(isActive ? "bg-[#EBF7E5] text-[#2D8600]" : "bg-slate-100 text-slate-600")">
-                                        @(isActive ? "Activa" : "Cancelada")
-                                    </span>
-                                </div>
-                                <p class="text-sm font-extrabold text-[#00324D]">@enrollment.WorkshopTitle</p>
-                                <p class="text-xs text-slate-500">Instructor: @enrollment.InstructorName • Inicio: @enrollment.StartDate.ToString("yyyy-MM-dd HH:mm") UTC</p>
-                            </div>
-
-                            @if (isActive)
-                            {
-                                <a asp-controller="Enrollments" asp-action="Certificate" asp-route-id="@enrollment.Id"
-                                   class="text-xs font-bold px-4 py-2 rounded-lg bg-[#00324D] text-white hover:bg-[#002235] transition shrink-0">
-                                    ⬇ Constancia PDF
-                                </a>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    </section>
-}
+        </form>
+    </div>
+</section>

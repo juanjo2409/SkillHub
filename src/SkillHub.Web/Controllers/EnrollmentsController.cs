@@ -88,7 +88,7 @@ public class EnrollmentsController : Controller
         if (file is null || file.Length == 0)
         {
             TempData["ErrorMessage"] = "Debes seleccionar un archivo Excel (.xlsx) válido.";
-            return RedirectToAction("Profile", "Account");
+            return RedirectToAction("Students", "Account");
         }
 
         try
@@ -102,7 +102,7 @@ public class EnrollmentsController : Controller
             TempData["ErrorMessage"] = $"Error al procesar el archivo Excel: {ex.Message}";
         }
 
-        return RedirectToAction("Profile", "Account");
+        return RedirectToAction("Students", "Account");
     }
 
     [HttpGet]
