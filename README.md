@@ -132,6 +132,6 @@ All 30 participants from `SkillHub_Data.xlsx` are also pre-seeded at startup wit
 ## 7. Author
 
 - **Full Name:** Juan José Maldonado Navarro
-- **Clan:** Cohorte 5
+- **Clan:** C#
 - **Email:** `juanjosemn160@gmail.com`
 - **ID Document:** `1043663187`
